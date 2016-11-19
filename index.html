@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>IdentifyMe</title>
+	</head>
+	<body>
+		+<input name=countryCode type=text size=3 value=91 maxlength=3 /><input placeholder="Phone Number" name=phone type=text size=11 maxlength=10 /><button id=getOtp>Get OTP</button>
+	</body>
+		<script src="socket.io-compiled.js"></script>
+		<script>
+			var dom = {
+				phone : document.getElementsByName('phone')[0],
+				countryCode : document.getElementsByName('countryCode')[0],
+				getOtpButton : document.getElementById('getOtp'),
+				getNumericInputs: function(){
+					return [this.phone, this.countryCode];
+				}
+			};
+			var socket = {
+				init : function(serverAddr, serverPort){
+					this.connection = io('http://'+serverAddr+':'+serverPort),
+					this.connection.on('connect', function(){
+						console.log("connected");
+						socket.connection.emit("hi", "client");
+					});
+					this.connection.on('hello', function(data){
+						console.log(data);
+					});
+					this.connection.on('disconnect', function(){
+						console.log("disconnected");
+					});
+				},
+				getOtp : function(){
+					this.connection.emit("getOtp");
+				}
+			};
+			var inputValidator = {
+				isInputComplete : function(){
+					if(!isNaN(dom.countryCode.value) && !isNaN(dom.phone.value)){
+						
+					}
+				},
+				toNumber : function(str, maxlength){
+					return str.replace(/[^0-9]/g, "").substr(0, maxlength);
+				},
+				getUserNumber : function(){
+					return {
+						countryCode : dom.countryCode.value,
+						phone : dom.phone.value
+					}
+				}
+			};
+			var activityRecorder = {
+				onKeyDown : function(e){
+					console.log(e);
+				}
+			};
+			var timeouts = {
+				keyupTimeout : null
+			};
+			dom.getNumericInputs().forEach(function(ni){
+				ni.addEventListener("keyup", function(event){
+					var numericValue = inputValidator.toNumber(ni.value, ni.getAttribute('maxlength'));
+					if(ni.value !== numericValue){
+						ni.value = numericValue;
+					}
+				})
+			})
+			socket.init('localhost', 3000);
+		</script>
+</html>
